@@ -1,0 +1,10 @@
+{
+	:phabricator #merge [
+		{
+			:url nil
+			:user-name nil
+			:user-certificate nil
+		} 
+		#include "/etc/auto-svn/phabricator.edn"
+	]
+}
