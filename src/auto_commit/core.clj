@@ -5,7 +5,7 @@
       :refer [log  trace  debug  info  warn  error  fatal  report
               logf tracef debugf infof warnf errorf fatalf reportf
               spy get-env]])
-    (:require [auto-commit.phabricator])
+    (:require [auto-commit.phabricator :as phb])
     (:require [aero.core :as aero])
 )
 
@@ -14,16 +14,17 @@
 ;https://github.com/hach-que/Phabricator.Conduit/blob/master/ConduitClient.cs
 
 (defn -main []
-  
   (let [
      conf (aero/read-config "config.edn")
-     phabricator (conf :phabricator)
-     sess (auto-commit.phabricator/session (phabricator :url) (phabricator :user-name) (phabricator :user-certificate))
+     cnfPhb (conf :phabricator)
+     sess (phb/session (cnfPhb :url) (cnfPhb :user-name) (cnfPhb :user-certificate))
     ]
-    (info sess)
-    ;(info "response1's status: " (:status @response1))
-    ;(debug "response1's headers: " (:headers @response1))
-    ;(println @response1)
+    (info "session started:" sess)
+    (let [
+        task (phb/query sess "maniphest.info" {:task_id 2006})
+      ]
+      (info "task" (select-keys (task :result) ["title" "status" "objectName" "statusName"]))
+    );let
    );let
 );(-main)
 

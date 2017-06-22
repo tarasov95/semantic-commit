@@ -14,33 +14,57 @@
   (sha1 (str dtToken sCeritficate))
 );signature
 
+(def clientInfo {
+  :client "phabricator.clj"
+  :clientVersion "0.1"
+});clientInfo
+
+(defn queryBodyFromMap [param]
+  {
+    :params (json/write-str param)
+    :output "json"
+    :__conduit__ "true"
+  }
+);queryBodyFromMap
+
+(defn query [sess sFunc mapParam]
+ (let [
+    param (merge {:__conduit__ (select-keys sess ["connectionID" "sessionKey"])} mapParam)
+    query (http/request {
+        :url (str (sess :url) sFunc)
+        :method :post
+        :form-params (queryBodyFromMap param)
+        :insecure? true
+     })
+  ]
+  (response query)
+ );let
+);query
+
+(defn response [query]
+  (let [
+      status (@query :status)
+      result (json/read-str (@query :body))
+    ]
+    (or (and (= status 200) {:result (result "result")}) {:status status})
+  );let
+)
+
 (defn session [sUrl sUser sCeritficate]
   (let [
      token (quot (System/currentTimeMillis) 1000)
-     param (json/write-str {
-        :client "phabricator.clj"
-        :clientVersion "0.1"
+     param {
         :user sUser
         :authToken token
         :authSignature (signature token sCeritficate)
-     })
-     body {
-        :params param
-        :output "json"
-        :__conduit__ "true"
      }
      query (http/request {
         :url (str sUrl "conduit.connect")
         :method :post
-        :form-params body
+        :form-params (queryBodyFromMap (merge param  clientInfo))
         :insecure? true
      })
     ]
-    (let [
-        status (@query :status)
-        result (json/read-str (@query :body))
-      ]
-      (and (= status 200) (result "result"))
-    );let
+    (merge {:url sUrl} ((response query) :result))
    );let
 );(-main)
