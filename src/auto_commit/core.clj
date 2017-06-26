@@ -8,6 +8,7 @@
     (:require [auto-commit.phabricator :as phb])
     (:require [aero.core :as aero])
     (:require [clojure.tools.cli :refer [parse-opts]])
+    (:require [clojure.tools.namespace.repl :refer [refresh]])
 )
 
 ;https://github.com/hach-que/Phabricator.Conduit/blob/master/ConduitClient.cs
@@ -29,26 +30,32 @@
   );let
 );args2Cmd
 
-(defn mainBody [cmd]
-  (let [     
-      conf (aero/read-config "config.edn")
-      cnfPhb (conf :phabricator)
-      sess (phb/session (cnfPhb :url) (cnfPhb :user-name) (cnfPhb :user-certificate))
-      ]
-      (info "cmd" cmd)
-      (info "session started:" sess)
-      (let [
-          task (phb/query sess "maniphest.info" {:task_id (cmd :task)})
-        ]
-        (info "task" (select-keys (task :result) ["title" "status" "objectName" "statusName"]))
-      );let
+(defn loadConf []
+  (aero/read-config "config.edn")
+);loadConf
+
+(def getConf (memoize loadConf));
+
+(defn startSess[conf] 
+  (let [cnfPhb (conf :phabricator)] 
+    (phb/session (cnfPhb :url) (cnfPhb :user-name) (cnfPhb :user-certificate))
   );let
-);mainBody
+);getSess
+
+(def getSess (memoize (fn [] (startSess (getConf)))));
+
+(defn queryTask [cmd]
+  (let [
+      task (phb/query (getSess) "maniphest.info" {:task_id (cmd :task)})
+    ]
+    (info "task" (select-keys (task :result) ["title" "status" "objectName" "statusName"]))
+  );let
+);queryTask
 
 (defn -main [& args]
   (let [cmd (args2Cmd args cli-options)]
     (or 
-      (and (cmd :task) (mainBody cmd)) 
+      (and (cmd :task) (queryTask cmd)) 
       (println (cmd :message))
     );or
   );let
