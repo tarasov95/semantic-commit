@@ -27,6 +27,15 @@
   }
 );queryBodyFromMap
 
+(defn response [query]
+  (let [
+      status (@query :status)
+      result (json/read-str (@query :body))
+    ]
+    (or (and (= status 200) {:result (result "result")}) {:status status})
+  );let
+)
+
 (defn query [sess sFunc mapParam]
  (let [
     param (merge {:__conduit__ (select-keys sess ["connectionID" "sessionKey"])} mapParam)
@@ -40,15 +49,6 @@
   (response query)
  );let
 );query
-
-(defn response [query]
-  (let [
-      status (@query :status)
-      result (json/read-str (@query :body))
-    ]
-    (or (and (= status 200) {:result (result "result")}) {:status status})
-  );let
-)
 
 (defn session [sUrl sUser sCeritficate]
   (let [
