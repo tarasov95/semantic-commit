@@ -13,10 +13,11 @@
 ;https://github.com/hach-que/Phabricator.Conduit/blob/master/ConduitClient.cs
 
 (def cli-options
-  ;; An option with a required argument
-  [["-t" "--task TASKID" "Manifest task ID"
-    :parse-fn #(Integer/parseInt %)]
-   ["-h" "--help"]])
+  [
+   ["-h" "--help"]
+   ["-t" "--task TASKID" "Manifest task ID" :parse-fn #(Integer/parseInt %)]
+  ]
+);--cli-options
 
 (defn args2Cmd [args opt]
   (let [cmd (parse-opts args opt)]
