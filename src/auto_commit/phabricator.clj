@@ -1,5 +1,5 @@
 (ns auto-commit.phabricator
-  (:gen-class)
+  ;(:gen-class)
   (:require [org.httpkit.client :as http])
   (:require [pandect.algo.sha1 :refer :all])
   (:require
@@ -49,6 +49,10 @@
   (response query)
  );let
 );query
+
+(defn queryTask [sess nIdTask]
+  (query sess "maniphest.info" {:task_id nIdTask})
+)
 
 (defn session [sUrl sUser sCeritficate]
   (let [

@@ -9,6 +9,7 @@
     (:require [aero.core :as aero])
     (:require [clojure.tools.cli :refer [parse-opts]])
     (:require [clojure.tools.namespace.repl :refer [refresh]])
+    (:require [clojure.java.shell :only [sh]])
 )
 
 ;https://github.com/hach-que/Phabricator.Conduit/blob/master/ConduitClient.cs
@@ -30,6 +31,10 @@
   );let
 );args2Cmd
 
+(defn svn [& args]
+  (apply clojure.java.shell/sh (cons "svn" args))
+)
+
 (defn loadConf []
   (aero/read-config "config.edn")
 );loadConf
@@ -42,20 +47,26 @@
   );let
 );getSess
 
-(def getSess (memoize (fn [] (startSess (getConf)))));
+(def getSess (memoize 
+  (fn [] (startSess (getConf)))
+));getSess
 
-(defn queryTask [cmd]
+(def getTask (memoize
+  (partial phb/queryTask (getSess))
+));getTask
+
+(defn printTask [cmd]
   (let [
-      task (phb/query (getSess) "maniphest.info" {:task_id (cmd :task)})
+      task (getTask (cmd :task))
     ]
     (info "task" (select-keys (task :result) ["title" "status" "objectName" "statusName"]))
   );let
-);queryTask
+);printTask
 
 (defn -main [& args]
   (let [cmd (args2Cmd args cli-options)]
     (or 
-      (and (cmd :task) (queryTask cmd)) 
+      (and (cmd :task) (printTask cmd)) 
       (println (cmd :message))
     );or
   );let
