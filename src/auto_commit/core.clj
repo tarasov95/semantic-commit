@@ -12,6 +12,9 @@
     (:require [clojure.java.shell :only [sh]])
 )
 
+;(clojure.tools.namespace.repl/refresh)
+;(-main "-t" "2007")
+
 ;https://github.com/hach-que/Phabricator.Conduit/blob/master/ConduitClient.cs
 
 (def cli-options
@@ -23,7 +26,7 @@
 
 (defn args2Cmd [args opt]
   (let [cmd (parse-opts args opt)]
-    (or 
+    (or
       (and (cmd :errors) {:message (cmd :errors)})
       (and ((cmd :options) :help) {:message (cmd :summary)})
       (cmd :options)
@@ -39,45 +42,136 @@
   (aero/read-config "config.edn")
 );loadConf
 
+
 (def getConf (memoize loadConf));
 
-(defn startSess[conf] 
-  (let [cnfPhb (conf :phabricator)] 
+(defn startSess[conf]
+  (let [cnfPhb (conf :phabricator)]
     (phb/session (cnfPhb :url) (cnfPhb :user-name) (cnfPhb :user-certificate))
   );let
+);startSess
+
+(def lazySess (memoize startSess))
+
+(defn getSess[]
+  (lazySess (getConf))
 );getSess
 
-(def getSess (memoize 
-  (fn [] (startSess (getConf)))
-));getSess
+(def lazyTask (memoize phb/queryTask))
 
-(def getTask (memoize
-  (partial phb/queryTask (getSess))
-));getTask
+(defn getTask[& args]
+  (apply lazyTask (cons (getSess) args))
+);getTask
+
+(def lazyProjects (memoize  phb/queryProjects))
+
+(defn getProjects[& args]
+  (lazyProjects (cons (getSess) args))
+);getProjects
+
+(defn getTaskProjects [task]
+  (((getProjects (task "projectPHIDs")) :result) "data")
+);getTaskProjects
+
+(defn selectProjectNames [mapProj]
+  (map (fn [el] (el "name")) (map (fn [el] (last el)) mapProj))
+);selectProjectNames
 
 (defn printTask [cmd]
   (let [
-      task (getTask (cmd :task))
+      task ((getTask (cmd :task)) :result)
     ]
-    (info "task" (select-keys (task :result) ["title" "status" "objectName" "statusName"]))
+    ;(def lastTask task)
+    ;(def lastProj (getTaskProjects task))
+    (info "task" (select-keys task ["title" "status" "objectName" "statusName" "projectPHIDs"]))
+    ;(info "task project IDs" (task "projectPHIDs"))
+    ;(info "task projects" (or  (getTaskProjects task) "null"))
+    (info (reduce str (selectProjectNames (getTaskProjects task))) (task "status") (task "objectName") (task "title"))
   );let
 );printTask
 
-(defn -main [& args]
-  (let [cmd (args2Cmd args cli-options)]
-    (or 
-      (and (cmd :task) (printTask cmd)) 
-      (println (cmd :message))
-    );or
-  );let
-);(-main)
+(defn proj
+  ([]  ((getConf) :proj))
+  ([name] ((proj) name))
+);proj
 
-(defn -run [& args]
-  (info "-run auto-commit.core")
-  (use 'auto-commit.phabricator :reload)
-  (use 'auto-commit.core :reload)
-  (-main args)
-);(-run)
+
+(defn proj-list [] (map (fn [el] (el 0)) (proj)));
+
+(defn mapProjProp [rgProj sPropName] (map (fn [el] ((el 1) sPropName)) rgProj));
+(defn proj-prop
+  ([sPropName] (mapProjProp (proj) sPropName))
+  ([sProjName sPropName] (first (mapProjProp (filter (fn [el] (= (el 0) sProjName)) (proj)) sPropName)))
+);proj-prop
+
+
+(defn projInfo [sName mapProps]
+  (fn
+    ([] sName)
+    ([sPropName] (mapProps sPropName))
+  );
+);
+
+(defn def-proj [sName]
+  (let [id  (clojure.string/replace sName  "/" "-")]
+    (eval (read-string
+            (str "(def " id " \"" sName "\")")
+          )
+    );eval
+    (eval (read-string
+            (str "(def proj-" id " (projInfo \"" sName "\" (proj \"" sName "\")))")
+          )
+    );eval
+  );let
+);def-proj
+
+(defn injectProjects []
+  (doall (map (fn [el] (def-proj (el 0))) (proj)))
+);injectProjects
+
+(def _rgProjFunc (injectProjects));
+
+
+(defn proj-status-all
+  ([sProjName]
+     (map (fn [l] {:path (subs l 7) :status (clojure.string/trim (subs l 0 7)) :proj sProjName})
+          (filter (fn [l] (not (empty? l)))
+            (clojure.string/split-lines (:out (svn "status" ((proj sProjName) :path))))
+          );filter
+     );map
+  )
+  ([] (mapcat (fn [el] (proj-status-all el)) (proj-list)))
+);proj-status
+
+(defn proj-status [& args]
+  (filter (fn [s] (< (count (:status s)) 2))
+    (apply proj-status-all args)
+  );filter
+);proj-status
+
+(defn proj-status-print [& args]
+  (clojure.pprint/print-table
+    (filter (fn [e] (not= (:status e) "X"))
+      (apply proj-status args)
+    )
+  )
+);proj-status-print
+
+;; (defn -main [& args]
+;;   (let [cmd (args2Cmd args cli-options)]
+;;     (or
+;;       (and (cmd :task) (printTask cmd))
+;;       (println (cmd :message))
+;;     );or
+;;   );let
+;; );(-main)
+
+;; (defn -run [& args]
+;;   (use 'auto-commit.phabricator :reload)
+;;   (use 'auto-commit.core :reload)
+;;   (info "reloaded")
+;;   (apply -main args)
+;; );(-run)
 
 ;(require '[clojure.tools.namespace.repl :refer [refresh]])
 ;(clojure.tools.namespace.repl/refresh)

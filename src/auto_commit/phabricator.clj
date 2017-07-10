@@ -30,9 +30,9 @@
 (defn response [query]
   (let [
       status (@query :status)
-      result (json/read-str (@query :body))
     ]
-    (or (and (= status 200) {:result (result "result")}) {:status status})
+    (and (not (= status 200)) (error @query))
+    (or (and (= status 200) {:result ((json/read-str (@query :body)) "result")}) {:status status})
   );let
 )
 
@@ -54,6 +54,10 @@
   (query sess "maniphest.info" {:task_id nIdTask})
 )
 
+(defn queryProjects [sess sPhids]
+  (query sess "project.query" {:phids sPhids})
+)
+
 (defn session [sUrl sUser sCeritficate]
   (let [
      token (quot (System/currentTimeMillis) 1000)
@@ -69,6 +73,7 @@
         :insecure? true
      })
     ]
+    (debug "session started" sUrl sUser)
     (merge {:url sUrl} ((response query) :result))
    );let
-);(-main)
+);(-session)
