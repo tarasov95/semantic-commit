@@ -66,7 +66,7 @@
 (def lazyProjects (memoize  phb/queryProjects))
 
 (defn getProjects[& args]
-  (lazyProjects (cons (getSess) args))
+  (apply lazyProjects (cons (getSess) args))
 );getProjects
 
 (defn getTaskProjects [task]
@@ -77,18 +77,36 @@
   (map (fn [el] (el "name")) (map (fn [el] (last el)) mapProj))
 );selectProjectNames
 
-(defn printTask [cmd]
+(defn subjFromTask [taskId]
   (let [
-      task ((getTask (cmd :task)) :result)
+      task ((getTask taskId) :result)
     ]
-    ;(def lastTask task)
-    ;(def lastProj (getTaskProjects task))
-    (info "task" (select-keys task ["title" "status" "objectName" "statusName" "projectPHIDs"]))
-    ;(info "task project IDs" (task "projectPHIDs"))
-    ;(info "task projects" (or  (getTaskProjects task) "null"))
-    (info (reduce str (selectProjectNames (getTaskProjects task))) (task "status") (task "objectName") (task "title"))
+    {:proj (reduce str (selectProjectNames (getTaskProjects task)))
+     :id (task "objectName")
+     :state (task "status")
+     :subj (task "title")
+    }
   );let
-);printTask
+);subjT
+
+(defn commit-subject
+  ([taskId state remarks]  (print-str (merge (subjFromTask taskId) {:state state :remarks remarks})))
+  ([taskId state] (print-str (merge (subjFromTask taskId) {:state state})))
+  ([taskId] (print-str (merge (subjFromTask taskId))))
+)
+
+;; (defn printTask [cmd]
+;;   (let [
+;;       task ((getTask (cmd :task)) :result)
+;;     ]
+;;     ;(def lastTask task)
+;;     ;(def lastProj (getTaskProjects task))
+;;     (info "task" (select-keys task ["title" "status" "objectName" "statusName" "projectPHIDs"]))
+;;     ;(info "task project IDs" (task "projectPHIDs"))
+;;     ;(info "task projects" (or  (getTaskProjects task) "null"))
+;;     (info (reduce str (selectProjectNames (getTaskProjects task))) (task "status") (task "objectName") (task "title"))
+;;   );let
+;; );printTask
 
 (defn proj
   ([]  ((getConf) :proj))
@@ -156,6 +174,11 @@
     )
   )
 );proj-status-print
+
+
+(defn commit [sProjName & args]
+  (clojure.string/split-lines (:out (svn "commit" ((proj sProjName) :path) "-m" (apply commit-subject args))))
+)
 
 ;; (defn -main [& args]
 ;;   (let [cmd (args2Cmd args cli-options)]

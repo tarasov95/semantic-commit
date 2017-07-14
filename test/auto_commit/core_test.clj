@@ -3,6 +3,8 @@
             [auto-commit.core :refer :all]
             [clojure.repl :refer :all]
             [clojure.tools.namespace.repl]
+            [taoensso.timbre :as timbre
+              :refer [spy info]]
             ))
 
 ;; (deftest a-test
@@ -17,9 +19,14 @@
 ;; (proj-list)
 
 
-(proj-status-print fs-extra)
+;; (proj-status-print fs-extra)
 
-(proj-status-print)
+;; (proj-status-print)
+
+
+
+;; (commit fs-aster 2053 "fix")
+
 
 ;; (map (fn [el] (println "!!!!!!" el)) (proj-status))
 ;(println (proj-status fs-core))
