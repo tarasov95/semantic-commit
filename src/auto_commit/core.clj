@@ -81,10 +81,10 @@
   (let [
       task ((getTask taskId) :result)
     ]
-    {:proj (reduce str (selectProjectNames (getTaskProjects task)))
-     :id (task "objectName")
+    {:p (reduce str (selectProjectNames (getTaskProjects task)))
+     :t (task "objectName")
      :state (task "status")
-     :subj (task "title")
+     :s (task "title")
     }
   );let
 );subjT
@@ -176,9 +176,15 @@
 );proj-status-print
 
 
-(defn commit [sProjName & args]
+(defn proj-commit [sProjName & args]
   (clojure.string/split-lines (:out (svn "commit" ((proj sProjName) :path) "-m" (apply commit-subject args))))
-)
+);proj-commit
+
+(defn proj-commit-print [& args]
+  (clojure.pprint/print-table
+    (apply proj-commit args)
+  )
+);proj-commit-print
 
 ;; (defn -main [& args]
 ;;   (let [cmd (args2Cmd args cli-options)]
