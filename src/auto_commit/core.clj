@@ -150,7 +150,7 @@
 (def _rgProjFunc (injectProjects));
 
 
-(defn proj-status-all
+(defn proj-status-data
   ([sProjName]
      (map (fn [l] {:path (subs l 7) :status (clojure.string/trim (subs l 0 7)) :proj sProjName})
           (filter (fn [l] (not (empty? l)))
@@ -158,31 +158,31 @@
           );filter
      );map
   )
-  ([] (mapcat (fn [el] (proj-status-all el)) (proj-list)))
+  ([] (mapcat (fn [el] (proj-status-data el)) (proj-list)))
 );proj-status
 
-(defn proj-status [& args]
+(defn proj-status-data-filtered [& args]
   (filter (fn [s] (< (count (:status s)) 2))
-    (apply proj-status-all args)
+    (apply proj-status-data args)
   );filter
 );proj-status
 
-(defn proj-status-print [& args]
+(defn proj-status [& args]
   (clojure.pprint/print-table
     (filter (fn [e] (not= (:status e) "X"))
-      (apply proj-status args)
+      (apply proj-status-data-filtered args)
     )
   )
 );proj-status-print
 
 
-(defn proj-commit [sProjName & args]
+(defn proj-commit-data [sProjName & args]
   (clojure.string/split-lines (:out (svn "commit" ((proj sProjName) :path) "-m" (apply commit-subject args))))
 );proj-commit
 
-(defn proj-commit-print [& args]
+(defn proj-commit [& args]
   (clojure.pprint/print-table
-    (apply proj-commit args)
+    (apply proj-commit-data args)
   )
 );proj-commit-print
 
