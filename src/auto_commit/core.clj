@@ -181,7 +181,7 @@
 );proj-commit
 
 (defn proj-commit [& args]
-  (clojure.pprint/print-table
+  (clojure.pprint/pprint
     (apply proj-commit-data args)
   )
 );proj-commit-print
