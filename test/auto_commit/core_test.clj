@@ -23,9 +23,9 @@
 
 ;; (proj-status-print)
 
+;;(getTaskProjects (:result (getTask 2084)))
 
-
-;; (commit fs-aster 2053 "fix")
+;; (commit-subject 2084 :fix)
 
 
 ;; (map (fn [el] (println "!!!!!!" el)) (proj-status))

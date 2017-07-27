@@ -57,34 +57,30 @@
   (lazySess (getConf))
 );getSess
 
-(def lazyTask (memoize phb/queryTask))
-
 (defn getTask[& args]
-  (apply lazyTask (cons (getSess) args))
+  (apply phb/queryTask (cons (getSess) args))
 );getTask
 
-(def lazyProjects (memoize  phb/queryProjects))
-
 (defn getProjects[& args]
-  (apply lazyProjects (cons (getSess) args))
+  (apply phb/queryProjects (cons (getSess) args))
 );getProjects
 
 (defn getTaskProjects [task]
-  (((getProjects (task "projectPHIDs")) :result) "data")
+  (get ((getProjects (get task "projectPHIDs")) :result) "data")
 );getTaskProjects
 
 (defn selectProjectNames [mapProj]
-  (map (fn [el] (el "name")) (map (fn [el] (last el)) mapProj))
+  (map (fn [el] (get el "name")) (map (fn [el] (last el)) mapProj))
 );selectProjectNames
 
 (defn subjFromTask [taskId]
   (let [
-      task ((getTask taskId) :result)
+      task (:result (getTask taskId))
     ]
     {:p (reduce str (selectProjectNames (getTaskProjects task)))
-     :t (task "objectName")
-     :state (task "status")
-     :s (task "title")
+     :t (get task "objectName")
+     :state (get task "status")
+     :s (get task "title")
     }
   );let
 );subjT
