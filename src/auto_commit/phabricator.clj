@@ -31,7 +31,7 @@
   (let [
       status (@query :status)
     ]
-    (and (not (= status 200)) (error @query))
+    (and (not (= status 200)) (throw  (ex-info (str "HTTP " (or status "?")) {:query @query})))
     (or (and (= status 200) {:result ((json/read-str (@query :body)) "result")}) {:status status})
   );let
 )
@@ -73,7 +73,7 @@
         :insecure? true
      })
     ]
-    (debug "session started" sUrl sUser)
+    ;(debug "session started" sUrl sUser)
     (merge {:url sUrl} ((response query) :result))
    );let
 );(-session)

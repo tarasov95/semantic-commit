@@ -7,6 +7,8 @@
               :refer [spy info]]
             ))
 
+
+(commit-subject fs-aster 1845 :progress "queue and group dial for Device type of member")
 ;; (deftest a-test
 ;;   (testing "FIXME, I fail."
 ;;     (is (= 0 1))))
@@ -23,7 +25,7 @@
 
 ;; (proj-status-print)
 
-;;(getTaskProjects (:result (getTask 2084)))
+;;(getTaskProjects (getSess) (:result (getTask (getSess) 2084)))
 
 ;; (commit-subject 2084 :fix)
 

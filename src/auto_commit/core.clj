@@ -51,22 +51,20 @@
   );let
 );startSess
 
-(def lazySess (memoize startSess))
-
 (defn getSess[]
-  (lazySess (getConf))
+  (startSess (getConf))
 );getSess
 
 (defn getTask[& args]
-  (apply phb/queryTask (cons (getSess) args))
+  (apply phb/queryTask args)
 );getTask
 
 (defn getProjects[& args]
-  (apply phb/queryProjects (cons (getSess) args))
+  (apply phb/queryProjects args)
 );getProjects
 
-(defn getTaskProjects [task]
-  (get ((getProjects (get task "projectPHIDs")) :result) "data")
+(defn getTaskProjects [sess task]
+  (get ((getProjects sess (get task "projectPHIDs")) :result) "data")
 );getTaskProjects
 
 (defn selectProjectNames [mapProj]
@@ -75,9 +73,11 @@
 
 (defn subjFromTask [taskId]
   (let [
-      task (:result (getTask taskId))
+      sess (getSess)
+      task (:result (getTask sess taskId))
     ]
-    {:p (reduce str (selectProjectNames (getTaskProjects task)))
+    {
+     ; :p (reduce str (selectProjectNames (getTaskProjects sess task)))
      :t (get task "objectName")
      :state (get task "status")
      :s (get task "title")
@@ -86,9 +86,9 @@
 );subjT
 
 (defn commit-subject
-  ([taskId state remarks]  (print-str (merge (subjFromTask taskId) {:state state :remarks remarks})))
-  ([taskId state] (print-str (merge (subjFromTask taskId) {:state state})))
-  ([taskId] (print-str (merge (subjFromTask taskId))))
+  ([proj taskId state remarks]  (print-str (merge {:p proj} (subjFromTask taskId) {:state state :remarks remarks})))
+  ([proj taskId state] (print-str (merge {:p proj}  (subjFromTask taskId) {:state state})))
+  ([proj taskId] (print-str (merge {:p proj} (subjFromTask taskId))))
 )
 
 ;; (defn printTask [cmd]
@@ -173,7 +173,7 @@
 
 
 (defn proj-commit-data [sProjName & args]
-  (clojure.string/split-lines (:out (svn "commit" ((proj sProjName) :path) "-m" (apply commit-subject args))))
+  (clojure.string/split-lines (:out (svn "commit" ((proj sProjName) :path) "-m" (apply commit-subject (cons sProjName args)))))
 );proj-commit
 
 (defn proj-commit [& args]
