@@ -31,8 +31,18 @@
   (let [
       status (@query :status)
     ]
-    (and (not (= status 200)) (throw  (ex-info (str "HTTP " (or status "?")) {:query @query})))
-    (or (and (= status 200) {:result ((json/read-str (@query :body)) "result")}) {:status status})
+    (if
+      (not (= status 200))
+      (throw  (ex-info (str "HTTP " (or status "?")) {:query @query}))
+    );if
+    (let [
+        body (json/read-str (@query :body))
+      ]
+      (if (body "error_code")
+        (throw  (ex-info (or (body "error_info") (body "error_code")) {:query @query}))
+        {:result (body "result")}; else
+      );--if
+    );
   );let
 )
 

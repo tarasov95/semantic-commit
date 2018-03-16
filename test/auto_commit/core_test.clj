@@ -8,7 +8,17 @@
             ))
 
 
-(commit-subject fs-aster 1845 :progress "queue and group dial for Device type of member")
+(let [
+    sess (getSess)
+    taskId 1845
+  ]
+  (info sess)
+  sess
+  ; (getTask sess taskId)
+);
+
+;
+; (commit-subject fs-aster 1845 :progress "queue and group dial for Device type of member")
 ;; (deftest a-test
 ;;   (testing "FIXME, I fail."
 ;;     (is (= 0 1))))
@@ -43,6 +53,3 @@
 ;(println (map (fn [sPath] (svn "status" sPath)) (proj-prop :path)))
 
 ;(println (:out (svn "status" (proj-prop "fs/core" :path))))
-
-
-
