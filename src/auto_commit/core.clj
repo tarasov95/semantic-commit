@@ -182,6 +182,9 @@
   )
 );proj-commit-print
 
+;; (defn infra-hosts [& args]
+;;   (clojure.pprint/pprint (apply auto-doc.infra/hosts args)))
+
 ;; (defn -main [& args]
 ;;   (let [cmd (args2Cmd args cli-options)]
 ;;     (or
