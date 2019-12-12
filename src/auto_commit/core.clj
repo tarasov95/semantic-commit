@@ -1,5 +1,5 @@
 (ns auto-commit.core
-  (:gen-class)
+  ;; (:gen-class)
   (:require
     [taoensso.timbre :as timbre
       :refer [log  trace  debug  info  warn  error  fatal  report
@@ -133,7 +133,7 @@
           )
     );eval
     (eval (read-string
-            (str "(def proj-" id " (projInfo \"" sName "\" (proj \"" sName "\")))")
+            (str "(def proj-" id " (auto-commit.core/projInfo \"" sName "\" (auto-commit.core/proj \"" sName "\")))")
           )
     );eval
   );let

@@ -1,6 +1,7 @@
 (ns auto-doc.infra
   (:require [clojure.data.json :as json]
             [auto-commit.core :as cc]
+            [clojure.string :as s]
             [clojure.pprint :as pp]))
 
 (defn load-data []
@@ -28,8 +29,54 @@
          h (i "hosts")]
      h)))
 
+(defn with-host-id [& args]
+  (map
+   #(merge {:id (first %)} (select-keys (second %) ["dns" "ip" "alias"]))
+   (apply hosts args)))
+
 (defn print-hosts [& args]
   (pp/pprint
-   (map
-    #(merge {:id (first %)} (select-keys (second %) ["dns" "ip"]))
-    (apply hosts args))))
+   (apply with-host-id args)))
+
+(defn active
+  ([prop] (active (data) prop))
+  ([coll prop]
+   (filter #(not (get "decommissioned" %)) (get coll prop))))
+
+(defn active-instances []
+  (active "instances"))
+
+(defn contains-val? [val h]
+  (let [lcv (s/lower-case (or val ""))]
+    (not-empty (filter #(= lcv (s/lower-case (or % "")))
+                      (map (partial get h) (keys h))))))
+
+(defn find-host [name]
+  (let [r (with-host-id)]
+    (first (filter (partial contains-val? name) r))))
+
+(defn find-host-id [name]
+  (or
+   (:id (find-host name))
+   name))
+
+(defn count-instances-by
+  ([prop] (count-instances-by (active-instances) prop))
+  ([inst prop]
+   (reduce
+    (fn [z e] (assoc z e
+                     (inc (or (get z e) 0))))
+    {}
+    (map #(find-host-id (get (second %) prop)) inst))))
+
+(let []
+  ;; (pp/pprint inst)
+  ;; (group-by (map #(select-keys (second %) ["appHost"]) inst ))
+  ;; (group-by #(get (select-keys % ["appHost"]) "appHost") inst)
+  ;; (pp/pprint (group-by #(get % "appHost") (map #(select-keys (second %) ["appHost"]) inst)))
+  ;; (find-host "sqlde")
+  ;; (pp/pprint (sort-by val (count-instances-by "appHost")))
+  ;; (pp/pprint (sort-by val (count-instances-by "dbHost")))
+  ;; [(count-instances-by "appHost") (count-instances-by "dbHost")]
+)
+

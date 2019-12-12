@@ -13,6 +13,6 @@
     [org.clojure/tools.cli "0.3.5"]
     [org.clojure/tools.namespace "0.2.11"]
   ]
-  :main ^:skip-aot auto-commit.core
+  :main auto-commit.front
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
