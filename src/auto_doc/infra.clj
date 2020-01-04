@@ -48,8 +48,13 @@
 
 (defn contains-val? [val h]
   (let [lcv (s/lower-case (or val ""))]
-    (not-empty (filter #(= lcv (s/lower-case (or % "")))
-                      (map (partial get h) (keys h))))))
+    (letfn [(eq-str [s] (= lcv (s/lower-case (or s ""))))
+            (is-match [v] (if (vector? v)
+                            (not-empty (filter eq-str v))
+                            (eq-str v)))]
+      (not-empty
+       (filter is-match
+               (map (partial get h) (keys h)))))))
 
 (defn find-host [name]
   (let [r (with-host-id)]
@@ -59,6 +64,11 @@
   (or
    (:id (find-host name))
    name))
+
+(defn list-instances-by
+  ([prop propVal] (list-instances-by (active-instances) prop propVal))
+  ([inst prop propVal]
+   (filter #(= propVal (find-host-id (get (second %) prop))) inst)))
 
 (defn count-instances-by
   ([prop] (count-instances-by (active-instances) prop))

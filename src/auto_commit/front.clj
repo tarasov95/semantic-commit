@@ -19,4 +19,7 @@
 (defn count-instances-by-sql []
   (pp/pprint (sort-by val (infra/count-instances-by "dbHost"))))
 
+(defn list-instances-by-iis [hostId]
+  (pp/pprint (sort (map first (infra/list-instances-by "appHost" hostId)))))
+
 (def find-host infra/find-host)
