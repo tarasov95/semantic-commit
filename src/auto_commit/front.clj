@@ -24,4 +24,6 @@
 
 (def find-host infra/find-host)
 
-(def count-instances-by-location infra/count-instances-by-location)
+(def count-instances-iis-by-location (partial infra/count-instances-by-location "appHost"))
+
+(def count-instances-sql-by-location (partial infra/count-instances-by-location "dbHost"))

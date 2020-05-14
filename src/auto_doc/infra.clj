@@ -79,8 +79,8 @@
     {}
     (map #(find-host-id (get (second %) prop)) inst))))
 
-(defn count-instances-by-location [location]
-  (let [cnt-data (count-instances-by "appHost")
+(defn count-instances-by-location [prop location]
+  (let [cnt-data (count-instances-by prop)
         id first
         cnt-val (comp first vals)]
     (sort-by #(-> % cnt-val -)
