@@ -79,6 +79,16 @@
     {}
     (map #(find-host-id (get (second %) prop)) inst))))
 
+(defn count-instances-by-location [location]
+  (let [cnt-data (count-instances-by "appHost")
+        id first
+        cnt-val (comp first vals)]
+    (sort-by #(-> % cnt-val -)
+             (filter #(not= nil (cnt-val %))
+                     (map
+                      (fn [host] {(id host) (-> host id cnt-data)})
+                      (hosts location))))))
+
 (let []
   ;; (pp/pprint inst)
   ;; (group-by (map #(select-keys (second %) ["appHost"]) inst ))

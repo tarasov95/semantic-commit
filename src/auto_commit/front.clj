@@ -23,3 +23,5 @@
   (pp/pprint (sort (map first (infra/list-instances-by "appHost" hostId)))))
 
 (def find-host infra/find-host)
+
+(def count-instances-by-location infra/count-instances-by-location)
