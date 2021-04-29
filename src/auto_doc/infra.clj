@@ -65,6 +65,11 @@
    (:id (find-host name))
    name))
 
+(defn list-hosts-by-location [location]
+  (->> (get (data) "hosts")
+       (filter #(= location (get (second %) "location")))
+       (map #(vector (first %) (select-keys (second %) ["ip" "dns" "alias"])))))
+
 (defn list-instances-by
   ([prop propVal] (list-instances-by (active-instances) prop propVal))
   ([inst prop propVal]

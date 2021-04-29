@@ -6,7 +6,7 @@
   :dependencies [
     [org.clojure/clojure "1.8.0"]
     [http-kit "2.2.0"]
-    [org.clojure/data.json "0.2.6"]
+    [org.clojure/data.json "1.0.0"]
     [com.taoensso/timbre "4.10.0"]
     [pandect "0.6.1"]
     [aero "1.1.2"]
