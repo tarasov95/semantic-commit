@@ -41,7 +41,7 @@
 (defn active
   ([prop] (active (data) prop))
   ([coll prop]
-   (filter #(not (get "decommissioned" %)) (get coll prop))))
+   (filter #(not (get (second %) "decommissioned")) (get coll prop))))
 
 (defn active-instances []
   (active "instances"))
